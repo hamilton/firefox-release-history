@@ -326,7 +326,7 @@ div.day.all-hands.minor-release {
 {:then _}
 	{#if visible}
 		<h1>
-			The history of Firefox <span>WIP</span>
+			A History of Firefox Versions <span>WIP</span>
 		</h1>
 		<div class=rollover>
 			{#if thisDay}
