@@ -95,7 +95,6 @@ const releaseRequest = fetch(url)
 		})
 	})
 
-// I want an array of arrays, and each is annotated with release information.
 $: releaseSet = releases;
 
 const range = (s, e) => [...Array(e-s).keys()].map(si=>s+si)
@@ -143,7 +142,11 @@ $: if(Object.keys(releaseMap).length) yearSet = range(2004, 2020)
 		day.lastRelease = lastMajorRelease
 		// was there a release?
 		const releases = getRelease(day)
-		if (releases) day.releases = releases
+		if (releases) {
+			day.releases = releases
+			day.majorFFRelease = releases.some(release=>release.category==='major')
+			day.onlyMinorReleases = !day.majorFFRelease
+		}
 		// was there an all-hands?
 		const allHandsDate = getAllHands(day)
 		if (allHandsDate) {
@@ -168,52 +171,29 @@ const isReleaseDate = (date) => {
 let thisDay;
 let thisMajorRelease;
 
-function isInFocusedRelease (day, compare) {
-	return day.lastRelease && compare && day.lastRelease && compare === day.lastRelease.str
+function isInFocusedRelease (dayLastReleaseStr, compare) {
+	return compare && compare === dayLastReleaseStr
+	//return day.lastRelease && compare && day.lastRelease && compare === day.lastRelease.str
 }
 
-function show(day, evt) {
-	if (day) {
-		thisDay=day;
-		thisMajorRelease = day.lastRelease.str;
-		// console.log(document.querySelectorAll(`.release-${thisMajorRelease}`))
-		// document.querySelectorAll(`.release-${thisMajorRelease}`).forEach(dayNode => {
-		// 	dayNode.style.backgroundColor = 'green'
-		// })
-		yearSet = [...yearSet.map(
-			year => [...year.map(d => {
-				const day = {...d}
-				day.inFocus = isInFocusedRelease(day, thisMajorRelease)
-				return day
-			})]
-		)]
+function show(str, lastReleaseStr) {
+	if (lastReleaseStr) {
+		yearSet.forEach(year => {
+			year.forEach(day => {
+				if (day.str === str) thisDay = day;
+			})
+		})
+		thisMajorRelease = lastReleaseStr;
+		document.querySelectorAll(`.release-${thisMajorRelease}`).forEach(dayNode => {
+			dayNode.classList.add('in-focus')
+		})
 	} else {
-		// document.querySelectorAll(`.release-${thisMajorRelease}`).forEach(dayNode => {
-		// 	dayNode.style.backgroundColor = 'white'
-		// })
+		document.querySelectorAll(`.release-${thisMajorRelease}`).forEach(dayNode => {
+			dayNode.classList.remove('in-focus')
+		})
 		thisMajorRelease = undefined;
 		thisDay = undefined;
 	}
-}
-function cellBG(day) {
-	let releaseColor;
-	let eventColor;
-	
-	if (day.inFocus) eventColor = '#6CB4EE'
-
-	if (day.releases) {
-		if (day.releases.some(release=>release.category==='major')) releaseColor = 'black';
-		else releaseColor = day.inFocus ? '#989898' : '#B2BEB5'
-	}
-
-	if (day.allHands) {eventColor = 'red';}
-
-	if (releaseColor && eventColor) {
-		return interpolate(releaseColor, eventColor)(.3)
-	}
-	if (releaseColor) return releaseColor
-	if (eventColor) return eventColor
-	return 'lightgray'
 }
 
 // when mounted, then reveal.
@@ -280,10 +260,9 @@ div.year-container {
 }
 
 div.day {
+	background-color: 	#E8E8E8;
 	width: var(--w);
 	height: var(--w);
-	/* background-color: lightgray; */
-	/* transition: 200ms; */
 	border: 1px solid rgba(0,0,0,.1);
 }
 
@@ -311,6 +290,34 @@ div.rollover {
 	border: 20px solid blue;
 }
 
+div.day.in-focus {
+	background-color: rgb(146, 197, 238);
+}
+
+div.day.in-focus.minor-release {
+	background-color: 	#8C92AC;
+}
+
+div.day.major-release {
+	background-color: black;
+}
+
+div.day.minor-release {
+	background-color: #B2BEB5;
+}
+
+div.day.all-hands {
+	background-color: #FF7F7F;
+}
+
+div.day.all-hands.major-release {
+	background-color:#C41E3A;
+}
+
+div.day.all-hands.minor-release {
+	background-color: red;
+}
+
 </style>
 
 <main>
@@ -318,9 +325,6 @@ div.rollover {
 	<Spinner />
 {:then _}
 	{#if visible}
-		<!-- {#each Object.keys(releaseSet) as release}
-			{releaseSet[release].version} a
-		{/each} -->
 		<h1>
 			The history of Firefox <span>WIP</span>
 		</h1>
@@ -352,24 +356,19 @@ div.rollover {
 							</div>
 						{/if}
 						<div class=year-container>
-						{#each year as day, i (day.str)}
-							{#if i === 0}
-								<div class=day 
-									style="
-										grid-row:{day.date.getDay()+1};
-									"
-								/>
-							{:else}
+						{#each year as {allHands, lastRelease, releases, str, date, inFocus, majorFFRelease, onlyMinorReleases}, i (str)}
+		
 								<div
-									on:mouseover={(evt) => show(day, evt)}
-									on:mouseout={() => show()}
-									class='day release-{day.lastRelease ? day.lastRelease.str : 'NONE'}'
 									style="
-										background-color: {cellBG(day)};
-										opacity: {day.releases ? 1 : .5}
+										grid-row:{i === 0 ? date.getDay()+1 : 'auto'};
 									"
+									class='day release-{lastRelease ? lastRelease.str : 'NONE'}'
+									class:major-release={majorFFRelease}
+									class:minor-release={onlyMinorReleases}
+									class:all-hands={allHands}
+									on:mouseover={(evt) => show(str, lastRelease.str)}
+									on:mouseout={() => show()}
 								/>
-							{/if}
 						{/each}
 						</div>
 					</div>
