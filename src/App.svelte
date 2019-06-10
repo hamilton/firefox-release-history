@@ -173,7 +173,6 @@ let thisMajorRelease;
 
 function isInFocusedRelease (dayLastReleaseStr, compare) {
 	return compare && compare === dayLastReleaseStr
-	//return day.lastRelease && compare && day.lastRelease && compare === day.lastRelease.str
 }
 
 function show(str, lastReleaseStr) {
@@ -201,124 +200,6 @@ let visible = false;
 onMount(() => {visible = true;})
 
 </script>
-
-<style>
-
-:root {
-	--w: 8px;
-}
-
-main {
-	width: max-content;
-	margin: auto;
-}
-
-h1 {
-	font-weight:900;
-	text-transform: uppercase;
-}
-
-h1 span {
-	font-weight: 100;
-}
-
-div.give-em-years {
-	margin-top:calc(var(--w) * 5);
-	margin-bottom:calc(var(--w) * 10);
-}
-
-div.year-set {
-	display: grid;
-	grid-template-columns: max-content max-content;
-	grid-gap: var(--w);
-	grid-column-gap: calc(var(--w));
-	margin: auto;
-	width: max-content;
-}
-
-div.year {
-	display: grid;
-	grid-template-columns: max-content max-content;
-}
-
-div.year-label {
-	writing-mode: vertical-rl;
-	text-orientation: mixed;
-	text-align: center;
-	font-size:12px;
-	padding-right: var(--w);
-	font-weight:900;
-	opacity: .4;
-}
-
-div.year-container {
-	display: grid;
-	grid-template-columns: repeat(53, var(--w));
-	grid-template-rows: repeat(7, var(--w));
-	grid-auto-flow: column;
-	grid-gap:1px;
-}
-
-div.day {
-	background-color: 	#E8E8E8;
-	width: var(--w);
-	height: var(--w);
-	border: 1px solid rgba(0,0,0,.1);
-}
-
-div.day:hover {
-	transform: scale(1.5);
-	border: 1px solid rgba(0,0,0,2);
-	/* box-shadow: 0px 0px 10px rgba(0,0,0,1); */
-}
-
-div.rollover {
-	min-height:100px;
-}
-
-.rollover-versions {
-	display: flex;
-}
-
-.rollover-version {
-	--rollover-fontsize: 14px;
-	margin-right: var(--w);
-	font-size: var(--rollover-fontsize);
-}
-
-.focused-release {
-	border: 20px solid blue;
-}
-
-div.day.in-focus {
-	background-color: rgb(146, 197, 238);
-}
-
-div.day.in-focus.minor-release {
-	background-color: 	#8C92AC;
-}
-
-div.day.major-release {
-	background-color: black;
-}
-
-div.day.minor-release {
-	background-color: #B2BEB5;
-}
-
-div.day.all-hands {
-	background-color: #FF7F7F;
-}
-
-div.day.all-hands.major-release {
-	background-color:#C41E3A;
-}
-
-div.day.all-hands.minor-release {
-	background-color: red;
-}
-
-</style>
 
 <main>
 {#await releaseRequest}
