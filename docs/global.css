@@ -66,6 +66,7 @@ button:focus {
 
 main {
 	width: max-content;
+	max-width: 900px;
 	margin: auto;
 }
 
@@ -116,7 +117,7 @@ div.year-container {
 }
 
 div.day {
-	background-color: 	#E8E8E8;
+	background-color: 	rgb(233, 232, 232);
 	width: var(--w);
 	height: var(--w);
 	border: 1px solid rgba(0,0,0,.1);
@@ -128,12 +129,28 @@ div.day:hover {
 	/* box-shadow: 0px 0px 10px rgba(0,0,0,1); */
 }
 
+.inactive-date {
+	opacity:.3;
+}
+
 div.rollover {
-	min-height:100px;
+	min-height:80px;
+}
+
+.rollover-date {
+	margin-bottom:.4rem;
+}
+
+.rollover-allhands {
+	margin-bottom: .4rem;
+	font-style:italic;
+	font-weight: 600;
+	color: #888;
 }
 
 .rollover-versions {
 	display: flex;
+	flex-wrap: wrap;
 }
 
 .rollover-version {
@@ -142,16 +159,20 @@ div.rollover {
 	font-size: var(--rollover-fontsize);
 }
 
+.ff-major-rollover {
+	font-weight:900;
+}
+
 .focused-release {
 	border: 20px solid blue;
 }
 
 div.day.in-focus {
-	background-color: rgb(146, 197, 238);
+	background-color: rgb(172, 217, 255);
 }
 
 div.day.in-focus.minor-release {
-	background-color: 	#8C92AC;
+	background-color: 	rgb(139, 151, 204);
 }
 
 div.day.major-release {
@@ -171,5 +192,5 @@ div.day.all-hands.major-release {
 }
 
 div.day.all-hands.minor-release {
-	background-color: red;
+	background-color: rgb(255, 0, 149);
 }

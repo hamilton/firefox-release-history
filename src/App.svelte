@@ -7,7 +7,13 @@ import { timeFormat } from 'd3-time-format'
 
 import Spinner from './Spinner.svelte'
 
-const url = 'https://product-details.mozilla.org/1.0/all.json'
+
+
+//export let url = '/firefox-history.json'//'https://product-details.mozilla.org/1.0/all.json'
+export let url = 'https://product-details.mozilla.org/1.0/all.json'
+
+
+const TODAY = new Date();
 
 const releaseEvents = [
 	{
@@ -16,6 +22,11 @@ const releaseEvents = [
 		event: 'Silent Updates Introduced'
 	}
 ]
+
+const daysBetween = (firstDate, secondDate) => {
+    const oneDay = 24*60*60*1000; // hours*minutes*seconds*milliseconds
+    return Math.round(Math.abs((firstDate.getTime() - secondDate.getTime())/(oneDay)));
+}
 
 const allHands = [
 	{
@@ -73,6 +84,8 @@ const allHands = [
 	},
 ]
 
+// releaseRequest is the promise that contains all the
+// version data.
 let releases = [];
 let releaseMap = {}
 const releaseRequest = fetch(url)
@@ -95,10 +108,14 @@ const releaseRequest = fetch(url)
 		})
 	})
 
+// this is probably not necessary! I'm hacking though.
 $: releaseSet = releases;
+$: firstDate = Object.keys(releaseMap).sort()[0]
 
+// yearning for a range function in js.
 const range = (s, e) => [...Array(e-s).keys()].map(si=>s+si)
 
+// formatters for date objects, here and there.
 const fm = timeFormat('%Y-%m-%d')
 const fmRollover = timeFormat("%B %d, %Y")
 
@@ -116,7 +133,7 @@ const getLastMajorRelease = day => {
 		})
 	})
 	if (releaseMap[dates[dates.length-1]]) {
-		return releaseMap[dates[dates.length-1]][0]
+		return releaseMap[dates[dates.length-1]].find(release => release.category === 'major' && release.product === 'firefox')
 	}
 	return undefined;
 	
@@ -133,6 +150,9 @@ const getAllHands = (day) => {
 
 let yearSet = []
 
+// this is the major reactive piece.
+// Once releaseMap gets some additional assignment,
+// it regenerates
 $: if(Object.keys(releaseMap).length) yearSet = range(2004, 2020)
 	.map(getYear)
 	.map(year => {
@@ -144,7 +164,7 @@ $: if(Object.keys(releaseMap).length) yearSet = range(2004, 2020)
 		const releases = getRelease(day)
 		if (releases) {
 			day.releases = releases
-			day.majorFFRelease = releases.some(release=>release.category==='major')
+			day.majorFFRelease = releases.some(release=>release.category==='major' && release.product==='firefox')
 			day.onlyMinorReleases = !day.majorFFRelease
 		}
 		// was there an all-hands?
@@ -176,7 +196,7 @@ function isInFocusedRelease (dayLastReleaseStr, compare) {
 }
 
 function show(str, lastReleaseStr) {
-	if (lastReleaseStr) {
+	if (str) {
 		yearSet.forEach(year => {
 			year.forEach(day => {
 				if (day.str === str) thisDay = day;
@@ -206,19 +226,31 @@ onMount(() => {visible = true;})
 	<Spinner />
 {:then _}
 	{#if visible}
-		<h1>
+		<h1 in:fly={{y:-10, duration:600}}>
 			A History of Firefox Versions <span>WIP</span>
 		</h1>
-		<div class=rollover>
+		<div in:fly={{y:-10, delay: 200, duration: 400}} class=rollover>
 			{#if thisDay}
-				{fmRollover(thisDay.date)}
+				<div class=rollover-date>
+					{fmRollover(thisDay.date)}
+								{#if thisDay.lastRelease}
+					{#if daysBetween(thisDay.date, thisDay.lastRelease.date)}
+						<span>
+							{daysBetween(thisDay.date, thisDay.lastRelease.date)} days since {thisDay.lastRelease.product} {thisDay.lastRelease.version}
+						</span>
+					{/if}
+				{/if}
+				</div>
+	
 				{#if thisDay.allHands}
-					All-Hands {thisDay.allHands.location}
+					<div class=rollover-allhands>
+						All-Hands {thisDay.allHands.location}
+					</div>
 				{/if}
 				{#if thisDay.releases}
 					<div class=rollover-versions>
 						{#each thisDay.releases as release}
-							<div class=rollover-version>
+							<div class=rollover-version class:ff-major-rollover={release.category === 'major' && release.product === 'firefox'}>
 								{release.product} {release.version}
 							</div>
 						{/each}
@@ -243,11 +275,12 @@ onMount(() => {visible = true;})
 									style="
 										grid-row:{i === 0 ? date.getDay()+1 : 'auto'};
 									"
-									class='day release-{lastRelease ? lastRelease.str : 'NONE'}'
+									class='day release-{(lastRelease && date < TODAY) ? lastRelease.str : 'NONE'}'
 									class:major-release={majorFFRelease}
 									class:minor-release={onlyMinorReleases}
+									class:inactive-date={str < firstDate || date > TODAY}
 									class:all-hands={allHands}
-									on:mouseover={(evt) => show(str, lastRelease.str)}
+									on:mouseover={(evt) => show(str, lastRelease ? lastRelease.str : undefined)}
 									on:mouseout={() => show()}
 								/>
 						{/each}
